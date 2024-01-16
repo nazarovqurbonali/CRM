@@ -1,0 +1,141 @@
+﻿@page "/pages/faculties"
+@inject IJSRuntime runtimeService;
+@inject IFacultyService _facultyService;
+@if (allFaculties.Data != null && allFaculties != null)
+{
+    <style>
+        
+        tr, td, th{
+        border: 1px solid grey;
+        border-collapse: collapse;
+        }
+    </style>
+    
+    <div>
+        <h3 style="color:#6c757d;margin-bottom: 3vh;">@title</h3>
+    </div>
+    <div class="row">
+
+        <div style="">
+            <div class="addAndSeacrh" style="width: 100%; height: auto ;display: flex; justify-content:space-between ; ">
+                <div>
+                    <a href="/pages/addfaculty" class="btn-sm btn btn-outline-success addLink" style="font-size: 20px ;width: auto;height: auto">Add+</a>
+                </div>
+                <div>
+                      <input style="font-size:20px" type="text" class="form-control searchText" placeholder="search by name" @bind="@query" @bind:event="oninput" @onkeyup="async () => await GetAllFaculties()"/>
+                </div>
+            </div>
+
+
+            <table class="table table-hover table-sm caption-top tableData" style="width: 100%;height: auto;margin-top: 4vh">
+                <thead style="width: 100%;height: auto ">
+                <tr style="font-size: 18px">
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Desc</th>
+                    <th>Status</th>
+                    <th style="text-align:center">Actions</th>
+                </tr>
+                </thead>
+                @foreach (var faculty in allFaculties.Data)
+                {
+                    cnt = cnt + 1;
+                    <tbody>
+                    <tr style="font-size:16px;">
+                        <td >@cnt.</td>
+                        <td>@faculty.Name</td>
+                        <td>@faculty.Description</td>
+                        <td>@faculty.Status</td>
+                        <td style="text-align:center">
+                            <a href="/pages/updatefaculty/@faculty.Id" id="Edit" style="margin-right:10px;" class="bs-tooltip" data-toggle="tooltip" data-placement="top" title="" data-original-title="Edit">
+                                <svg style="color:orange;" xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-edit" width="33" height="30" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path>
+                                    <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path>
+                                    <path d="M16 5l3 3"></path>
+                                </svg>
+                            </a>
+                            <a @onclick="async () => await DeleteFaculty(faculty)" class="bs-tooltip" data-toggle="tooltip" data-placement="top" title="" data-original-title="Delete">
+                                <svg style="color:red;" xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="33" height="30" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M4 7l16 0"></path>
+                                    <path d="M10 11l0 6"></path>
+                                    <path d="M14 11l0 6"></path>
+                                    <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>
+                                    <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                }
+            </table>
+            <nav aria-label="Page navigation example">
+                <ul class="pagination">
+                    @if (allFaculties.PageNumber > 1)
+                    {
+                        <li class="page-item">
+                            <a @onclick="async () => await GetAllFaculties(allFaculties.PageNumber - 1)" class="page-link" style="cursor:pointer" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    }
+                    @for (int i = 1; i <= allFaculties.TotalPages; i++)
+                    {
+                        string activeClass = (i == allFaculties.PageNumber) ? "active" : "";
+                        int c = i;
+                        <li class="page-item @activeClass">
+                            <a @onclick="async () => await GetAllFaculties(c)" style="cursor:pointer" class="page-link">@c</a>
+                        </li>
+                    }
+                    @if (allFaculties.PageNumber < allFaculties.TotalPages)
+                    {
+                        <li class="page-item">
+                            <a @onclick="async () => await GetAllFaculties(allFaculties.PageNumber + 1)" class="page-link" style="cursor:pointer" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    </div>
+}
+
+@code
+{
+    private PagedResponse<List<GetFacultyDto>> allFaculties = new();
+    private string title = "All Faculties";
+    private string? query = null;
+    int cnt = 0;
+
+    public async Task DeleteFaculty(GetFacultyDto model)
+    {
+        bool comfirmed = await runtimeService.InvokeAsync<bool>("confirm", "Are you sure you want to delete ?");
+        if (comfirmed)
+        {
+            var response = await _facultyService.DeleteFacultyById(model.Id);
+            if (response.StatusCode == 200)
+            {
+                allFaculties.Data.Remove(model);
+            }
+        }
+    }
+
+    public async Task GetAllFaculties(int pageNumber = 1)
+    {
+        var filter = new FacultyFilter
+        {
+            PageNumber = pageNumber,
+            PageSize = 10,
+            Name = query
+        };
+        allFaculties = await _facultyService.GetAllFaculties(filter);
+        cnt = 0;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAllFaculties();
+    }
+}

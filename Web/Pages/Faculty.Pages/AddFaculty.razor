@@ -1,0 +1,60 @@
+﻿@page "/pages/addfaculty"
+@inject IFacultyService _facultyService;
+@inject NavigationManager NavigationManager
+<h3 style="color: grey;margin-bottom: 3vh;margin-top: 3vh">Add new faculty</h3>
+
+<div class="my-2">
+    @responseMessage
+</div>
+<div class="row">
+    <div class="col-md-6" style="font-size: 20px">
+        <EditForm Model="@model" OnValidSubmit="Save">
+            <DataAnnotationsValidator/>
+            <div class="form-group">
+                <label for="Name">Faculty name</label>
+                <InputText class="form-control" @bind-Value="model.Name" id="Name" />
+                <ValidationMessage For="@(()=>model.Name)"/>
+            </div>
+            <div class="form-group">
+                <label for="Description">Description</label>
+                <InputText class="form-control" @bind-Value="model.Description" id="Description" />
+                <ValidationMessage For="@(()=>model.Description)"/>
+            </div>
+            <div class="form-group">
+                <label for="Status">Status</label>
+                 <InputSelect class="form-control" @bind-Value="@model.Status">
+                    @foreach (var status in Enum.GetValues(typeof(FacultyStatus)))
+                    {
+                        <option value="@status">@status</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(()=>model.Status)" />
+            </div>
+            <div class="my-2">
+                <button type="submit" class="btn btn-outline-success">Save</button>
+                <a href="/pages/faculties" class="btn btn-outline-dark" style="margin-left:10px">Cancel</a>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code
+{
+    private AddFacultyDto model = new();
+    private string responseMessage = string.Empty;
+    private async Task Save()
+    {
+        var response = await _facultyService.AddFaculty(model);
+        if (response.StatusCode==200)
+        {
+            responseMessage = response.Description.FirstOrDefault()??"Success";
+            NavigationManager.NavigateTo("/pages/faculties");
+        }
+        else
+        {
+            responseMessage = response.Description.FirstOrDefault()??"Not saved !";
+        }
+    }
+}
+
+

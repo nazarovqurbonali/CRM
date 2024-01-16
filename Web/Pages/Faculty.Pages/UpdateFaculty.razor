@@ -1,0 +1,90 @@
+﻿@page "/pages/updatefaculty/{facultyId:int}"
+@inject IFacultyService _facultyService;
+@inject NavigationManager NavigationManager
+<h3 style="color: grey;margin-bottom: 3vh;margin-top: 3vh">Update faculty</h3>
+
+<div class="my-2">
+    @responseMessage
+</div>
+<div class="row">
+    <div class="col-md-6" style="font-size: 20px">
+        <EditForm Model="@model" OnValidSubmit="Save">
+            <DataAnnotationsValidator/>
+            <div class="form-group">
+                <label for="Name">Faculty name</label>
+                <InputText class="form-control" @bind-Value="model.Name" id="Name" />
+                <ValidationMessage For="@(()=>model.Name)"/>
+            </div>
+            <div class="form-group">
+                <label for="Description">Description</label>
+                <InputText class="form-control" @bind-Value="model.Description" id="Description" />
+                <ValidationMessage For="@(()=>model.Description)"/>
+            </div>
+            <div class="form-group">
+                <label for="Status">Status</label>
+                <InputSelect class="form-control" @bind-Value="@model.Status">
+                    
+                    @foreach (var item in Enum.GetValues(typeof(FacultyStatus)))
+                    {
+                        if (model.Status==0)
+                        {
+                            <option selected value="-1">Choose...</option>
+                        }
+                        <option value="@item">@item</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(()=>model.Status)" />
+            </div>
+            <div class="my-2">
+                <button type="submit" class="btn btn-outline-success">Save</button>
+                <a href="/pages/faculties" class="btn btn-outline-dark" style="margin-left:10px">Cancel</a>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public int facultyId { get; set; }
+    private UpdateFacultyDto model = new();
+    private string responseMessage = string.Empty;
+    private async Task Save()
+    {
+        var response = await _facultyService.UpdateFaculty(model);
+        if (response.StatusCode==200)
+        {
+            responseMessage = response.Description.FirstOrDefault()??"Success";
+            NavigationManager.NavigateTo("/pages/faculties");
+        }
+        else
+        {
+            responseMessage = response.Description.FirstOrDefault()??"Not saved !";
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        if(facultyId>0)
+        {
+            var faculty = await _facultyService.GetFacultyById(facultyId);
+            if(faculty.Data!=null)
+            {
+                model = new UpdateFacultyDto
+                {
+                    Id = faculty.Data.Id,
+                    Status = faculty.Data.Status,
+                    Name = faculty.Data.Name,
+                    Description = faculty.Data.Description
+                };
+            }
+            else
+            {
+                model = new();
+                responseMessage = "Data not found !";
+            }
+        }
+        await base.OnInitializedAsync();
+    }
+}
+
+

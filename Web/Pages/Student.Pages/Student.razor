@@ -1,0 +1,150 @@
+@page "/pages/students"
+@inject IJSRuntime runtimeService;
+@inject IStudentService StudentService;
+@if (allStudents.Data != null && allStudents != null)
+{
+    <style>
+        
+        tr, td, th{
+        border: 1px solid grey;
+        border-collapse: collapse;
+        }
+    </style>
+    <div>
+        <h3 style="color:#6c757d; margin-bottom: 3vh" >@title</h3>
+    </div>
+    <div class="row">
+        <div  >
+            <div class="addAndSeacrh" style=" width: 100%; height: auto ;display: flex; justify-content: space-between">
+                <div>
+                    <a href="/pages/createstudents" class="btn-sm btn btn-outline-success addLink" style="font-size: 20px ">Add+</a>
+                </div>
+                <div>
+                    <input  type="text" class="form-control searchText" placeholder="search by name" style="font-size: 20px " @bind="@query" @bind:event="oninput" @onkeyup="async () => await GetAllStudents()"/>
+                </div>
+            </div>
+            <table class="table table-hover table-sm caption-top tableData" style="width: 100% ; height: auto;margin-top: 3vh;">
+                <thead  style="width: 100% ; height: auto ">
+                <tr  style="width: 100% ; height: auto ; font-size: 18px" >
+
+                    <th scope="col">#</th>
+                    <th scope="col" colspan="2">Full name</th>
+                    <th scope="col">Gender</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">BirthDate</th>
+                    <th scope="col">Address</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">PhoneNumber</th>
+                    <th scope="col">Actions</th>
+
+                </tr>
+                </thead>
+                @foreach (var student in allStudents.Data)
+                {
+                    cnt = cnt + 1;
+                    <tbody>
+                    <tr style="width: 100% ; height: auto ; font-size: 16px">
+                        <td >@cnt.</td>
+                        <td colspan="2">@student.FirstName  @student.LastName</td>
+                        <td>@student.Gender</td>
+                        <td>@student.Status</td>
+                        <td>@student.BirthDate</td>
+                        <td>@student.Address</td>
+                        <td>@student.Email</td>
+                        <td>@student.PhoneNumber</td>
+                        
+                        
+                        
+                        <td style="text-align:center">
+                            <a href="/pages/updatestudent/@student.Id" id="Edit" style="margin-right:10px;" class="bs-tooltip" data-toggle="tooltip" data-placement="top" title="" data-original-title="Edit">
+                                <svg style="color:darkorange" xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-edit" width="33" height="30" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path>
+                                    <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path>
+                                    <path d="M16 5l3 3"></path>
+                                </svg>
+                            </a>
+                            <a @onclick="async () => await DeleteStudent(student)" class="bs-tooltip" data-toggle="tooltip" data-placement="top" title="" data-original-title="Delete">
+                                <svg style="color:red;" xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="33" height="30" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M4 7l16 0"></path>
+                                    <path d="M10 11l0 6"></path>
+                                    <path d="M14 11l0 6"></path>
+                                    <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>
+                                    <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                }
+            </table>
+            <nav aria-label="Page navigation example">
+                <ul class="pagination">
+                    @if (allStudents.PageNumber > 1)
+                    {
+                        <li class="page-item">
+                            <a @onclick="async () => await GetAllStudents(allStudents.PageNumber - 1)" class="page-link" style="cursor:pointer" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    }
+                    @for (int i = 1; i <= allStudents.TotalPages; i++)
+                    {
+                        string activeClass = (i == allStudents.PageNumber) ? "active" : "";
+                        int     c = i;
+                        <li class="page-item @activeClass">
+                            <a @onclick="async () => await GetAllStudents(c)" style="cursor:pointer" class="page-link">@c</a>
+                        </li>
+                    }
+                    @if (allStudents.PageNumber < allStudents.TotalPages)
+                    {
+                        <li class="page-item">
+                            <a @onclick="async () => await GetAllStudents(allStudents.PageNumber + 1)" class="page-link" style="cursor:pointer" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    </div>
+}
+
+@code
+{
+    private PagedResponse<List<GetStudentDto>>? allStudents = new();
+    private string title = "All Students";
+    private string? query ;
+    int cnt = 0;
+
+    public async Task DeleteStudent(GetStudentDto model)
+    {
+        bool comfirmed = await runtimeService.InvokeAsync<bool>("confirm", "Are you sure you want to delete ?");
+        if (comfirmed)
+        {
+            var response = await StudentService.DeleteStudentAsync(model.Id);
+            if (response.StatusCode == 200)
+            {
+                allStudents.Data.Remove(model);
+            }
+        }
+    }
+
+    public async Task GetAllStudents(int pageNumber = 1)
+    {
+        var filter = new StudentFilter()
+        {
+            PageNumber = pageNumber,
+            PageSize = 10,
+            Name = query,
+        };
+        allStudents = await StudentService.GetStudentsAsync(filter) as PagedResponse<List<GetStudentDto>>;
+        cnt = 0;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAllStudents();
+    }
+}

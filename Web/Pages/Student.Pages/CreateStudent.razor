@@ -1,0 +1,94 @@
+@page "/pages/createstudents"
+@inject IStudentService StudentService;
+@inject NavigationManager NavigationManager
+<h3 style="color: grey;margin-bottom: 3vh;margin-top: 3vh">Add new student</h3>
+
+
+            
+<div class="my-3">
+    @responseMessage
+</div>
+<div class="row my-2">
+    <div class="col-md-6" style="font-size: 20px">
+        <EditForm Model="@model" OnValidSubmit="Save">
+            <DataAnnotationsValidator/>
+            <div class="form-group">
+                <label for="FirstName">FirstName</label>
+                <InputText class="form-control" @bind-Value="@model.FirstName" id="FirstName"/>
+                <ValidationMessage For="@(() => model.FirstName)"/>
+            </div>
+            <div class="form-group">
+                <label for="LastName">LastName</label>
+                <InputText class="form-control" @bind-Value="model.LastName" id="LastName"/>
+                <ValidationMessage For="@(() => model.LastName)"/>
+            </div>
+            <div class="form-group">
+                <label for="LastName">PhoneNumber</label>
+                <InputText class="form-control" @bind-Value="model.PhoneNumber" id="PhoneNumber"/>
+                <ValidationMessage For="@(() => model.PhoneNumber)"/>
+            </div>
+            <div class="form-group">
+                <label for="LastName">Email</label>
+                <InputText class="form-control" @bind-Value="model.Email" id="Email"/>
+                <ValidationMessage For="@(() => model.Email)"/>
+            </div>
+            <div class="form-group">
+                <label for="LastName">Address</label>
+                <InputText class="form-control" @bind-Value="model.Address" id="Address"/>
+                <ValidationMessage For="@(() => model.Address)"/>
+            </div>
+            <div class="form-group">
+                <label for="LastName">BirthDate</label>
+                <InputText class="form-control" @bind-Value="model.BirthDate" id="BirthDate"/>
+                <ValidationMessage For="@(() => model.BirthDate)"/>
+            </div>
+
+            <div class="form-group">
+                <label for="Gender">Gender</label>
+                <InputSelect class="form-control" @bind-Value="@model.Gender">
+                    @foreach (var gen in Enum.GetValues(typeof(Gender)))
+                    {
+                        <option value="@gen">@gen</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => model.Gender)"/>
+            </div>
+            
+
+            <div class="form-group">
+                <label for="Status">Status</label>
+                <InputSelect class="form-control" @bind-Value="@model.Status">
+                    @foreach (var status in Enum.GetValues(typeof(Status)))
+                    {
+                        <option value="@status">@status</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => model.Status)"/>
+            </div>
+            <div class="my-2">
+                <button type="submit" class="btn btn-outline-success">Save</button>
+                <a href="/pages/students" class="btn btn-outline-dark" style="margin-left:10px">Cancel</a>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code
+{
+    private AddStudentDto model = new();
+    private string responseMessage = string.Empty;
+
+    private async Task Save()
+    {
+        var response = await StudentService.AddStudentAsync(model);
+        if (response.StatusCode == 200)
+        {
+            responseMessage = response.Description.FirstOrDefault() ?? "Success";
+            NavigationManager.NavigateTo("/pages/students");
+        }
+        else
+        {
+            responseMessage = response.Description.FirstOrDefault() ?? "Not saved !";
+        }
+    }
+}
